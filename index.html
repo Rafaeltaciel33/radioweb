@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <title>Meu Projeto Firebase</title>
-  <script type="module">
-    // Importa módulos do Firebase (v9+ modular SDK)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat Rádio com Firebase</title>
 
-    // Configuração do Firebase
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Importa módulos do Firebase (versão modular)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Configuração do Firebase (substitua pelos seus dados)
     const firebaseConfig = {
       apiKey: "AIzaSyB2-S4zYL2eU_GwPoyUwXeZLXUPdpzAzVM",
       authDomain: "amordeus-ae3d6.firebaseapp.com",
@@ -20,69 +22,98 @@
       measurementId: "G-2QQSBLDKED"
     };
 
-    // Inicializa app Firebase e Analytics
+    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-
-    // Firestore
     const db = getFirestore(app);
 
-    // Função para enviar uma mensagem
-    async function enviarMensagem(texto) {
-      try {
-        await addDoc(collection(db, "chat-messages"), {
-          text: texto,
-          timestamp: Date.now()
-        });
-      } catch (e) {
-        console.error("Erro ao enviar mensagem:", e);
-      }
+    // Envia mensagem para o Firestore
+    async function enviarMensagem(nome, texto) {
+      if (texto.trim() === "") return;
+      await addDoc(collection(db, "mensagens"), {
+        nome: nome || "Anônimo",
+        texto: texto,
+        timestamp: serverTimestamp()
+      });
     }
 
-    // Escuta mensagens em tempo real
-    const q = query(collection(db, "chat-messages"), orderBy("timestamp"));
-    onSnapshot(q, (querySnapshot) => {
-      const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = "";
-      querySnapshot.forEach((doc) => {
+    // Atualiza mensagens em tempo real
+    const mensagensRef = collection(db, "mensagens");
+    const mensagensQuery = query(mensagensRef, orderBy("timestamp", "asc"));
+    onSnapshot(mensagensQuery, (snapshot) => {
+      const container = document.getElementById("chat");
+      container.innerHTML = "";
+      snapshot.forEach((doc) => {
         const msg = doc.data();
         const div = document.createElement("div");
-        div.textContent = msg.text;
-        div.className = "mb-2 p-2 bg-red-100 rounded";
-        messagesDiv.appendChild(div);
+        div.innerHTML = `<strong>${msg.nome}:</strong> ${msg.texto}`;
+        container.appendChild(div);
       });
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      container.scrollTop = container.scrollHeight;
     });
 
-    // Event listener para o botão enviar
-    window.onload = () => {
-      const sendBtn = document.getElementById("send-btn");
-      const input = document.getElementById("message-input");
+    // Aguarda o DOM carregar
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("form-chat");
+      const inputNome = document.getElementById("nome");
+      const inputTexto = document.getElementById("mensagem");
 
-      sendBtn.addEventListener("click", () => {
-        const text = input.value.trim();
-        if (text !== "") {
-          enviarMensagem(text);
-          input.value = "";
-        }
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        enviarMensagem(inputNome.value, inputTexto.value);
+        inputTexto.value = "";
       });
-
-      input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          sendBtn.click();
-        }
-      });
-    };
+    });
   </script>
+
   <style>
     body {
-      font-family: 'Montserrat', sans-serif;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #chat {
+      height: 300px;
+      overflow-y: auto;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    input {
+      width: calc(100% - 130px);
+    }
+    #nome {
+      width: calc(100% - 22px);
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #dc2626;
+      color: white;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
-  <input id="message-input" type="text" placeholder="Digite sua mensagem..." style="width: 100%; padding: 10px; margin-top: 10px;">
-  <button id="send-btn" style="width: 100%; padding: 10px; margin-top: 5px; background-color: #dc2626; color: white; border: none; font-weight: bold;">Enviar</button>
+  <h1>📻 Chat Rádio</h1>
+
+  <input type="text" id="nome" placeholder="Seu nome" required/>
+
+  <div id="chat"></div>
+
+  <form id="form-chat">
+    <input type="text" id="mensagem" placeholder="Digite sua mensagem..." required />
+    <button type="submit">Enviar</button>
+  </form>
 </body>
 </html>
