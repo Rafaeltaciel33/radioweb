@@ -1,131 +1,270 @@
-<!DOCTYPE html>
+
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rádio Ao Vivo com Chat</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB2-S4zYL2eU_GwPoyUwXeZLXUPdpzAzVM",
-      authDomain: "amordeus-ae3d6.firebaseapp.com",
-      projectId: "amordeus-ae3d6",
-      storageBucket: "amordeus-ae3d6.appspot.com",
-      messagingSenderId: "1007935161262",
-      appId: "1:1007935161262:web:14a572f7c4729cfbbc3e3f",
-      measurementId: "G-2QQSBLDKED"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    async function enviarMensagem(nome, texto) {
-      if (texto.trim() === "") return;
-      await addDoc(collection(db, "mensagens"), {
-        nome: nome || "Anônimo",
-        texto: texto,
-        timestamp: serverTimestamp()
-      });
-    }
-
-    const mensagensRef = collection(db, "mensagens");
-    const mensagensQuery = query(mensagensRef, orderBy("timestamp", "asc"));
-
-    onSnapshot(mensagensQuery, (snapshot) => {
-      const container = document.getElementById("chat");
-      container.innerHTML = "";
-      snapshot.forEach((doc) => {
-        const msg = doc.data();
-        const div = document.createElement("div");
-        div.className = "mb-1";
-        div.innerHTML = `<strong>${msg.nome}:</strong> ${msg.texto}`;
-        container.appendChild(div);
-      });
-      container.scrollTop = container.scrollHeight;
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("form-chat");
-      const inputNome = document.getElementById("nome");
-      const inputTexto = document.getElementById("mensagem");
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        enviarMensagem(inputNome.value, inputTexto.value);
-        inputTexto.value = "";
-      });
-    });
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Rádio Amor Deus Gospel
+  </title>
+  <script src="https://cdn.tailwindcss.com">
   </script>
-
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap" rel="stylesheet"/>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-    }
-    #chat {
-      height: 300px;
-      overflow-y: auto;
-      background: #1e293b;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 10px;
+   body {
+      font-family: 'Montserrat', sans-serif;
     }
   </style>
-</head>
-<body class="bg-red-600 text-white">
-
-  <!-- Cabeçalho -->
-  <header class="bg-red-700 p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Minha Rádio</h1>
-    <button id="menu-btn" class="md:hidden text-white">☰</button>
-    <nav id="mobile-menu" class="hidden md:flex space-x-4">
-      <a href="#" class="hover:underline">Início</a>
-      <a href="#" class="hover:underline">Programação</a>
-      <a href="#" class="hover:underline">Contato</a>
+ </head>
+ <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+  <!-- Cabeçalho / Navbar -->
+  <header class="bg-white shadow-md">
+   <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+     <img alt="Logo do Rádio Amor Deus Gospel, um coração com uma cruz dentro, nas cores vermelho e branco" class="w-12 h-12 rounded-full object-cover" height="60" src="https://storage.googleapis.com/a1aa/image/662ea4ff-baf6-4c1e-c421-4818703fdc25.jpg" width="60"/>
+     <h1 class="text-2xl font-bold text-red-600">
+      Rádio Amor Deus Gospel
+     </h1>
+    </div>
+    <nav class="hidden md:flex space-x-8 font-semibold text-gray-700">
+     <a class="hover:text-red-600 transition" href="#">
+      Início
+     </a>
+     <a class="hover:text-red-600 transition" href="#programas">
+      Programas
+     </a>
+     <a class="hover:text-red-600 transition" href="#noticias">
+      Notícias
+     </a>
+     <a class="hover:text-red-600 transition" href="#sobre">
+      Sobre
+     </a>
+     <a class="hover:text-red-600 transition" href="#contato">
+      Contato
+     </a>
     </nav>
-  </header>
-
-  <!-- Conteúdo principal -->
-  <main class="p-6 flex flex-col items-center space-y-6">
-    <h2 class="text-3xl font-bold">Ouça Nossa Rádio Ao Vivo</h2>
-
-    <button id="playButton" class="bg-white text-red-600 font-bold px-6 py-3 rounded shadow hover:bg-red-100 transition">
-      Ouvir Ao Vivo
+    <button aria-label="Alternar menu" class="md:hidden text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600" id="menu-btn">
+     <i class="fas fa-bars fa-lg">
+     </i>
     </button>
-
+   </div>
+   <!-- Menu móvel -->
+   <nav class="hidden md:hidden bg-white border-t border-gray-200" id="mobile-menu">
+    <a class="block px-4 py-3 border-b border-gray-200 hover:bg-red-50 text-red-600 font-semibold" href="#">
+     Início
+    </a>
+    <a class="block px-4 py-3 border-b border-gray-200 hover:bg-red-50" href="#programas">
+     Programas
+    </a>
+    <a class="block px-4 py-3 border-b border-gray-200 hover:bg-red-50" href="#noticias">
+     Notícias
+    </a>
+    <a class="block px-4 py-3 border-b border-gray-200 hover:bg-red-50" href="#sobre">
+     Sobre
+    </a>
+    <a class="block px-4 py-3 hover:bg-red-50" href="#contato">
+     Contato
+    </a>
+   </nav>
+  </header>
+  <!-- Seção Hero -->
+  <section class="bg-red-600 text-white flex flex-col items-center justify-center text-center px-6 py-20">
+   <h2 class="text-4xl md:text-5xl font-extrabold mb-4">
+    Bem-vindo ao Rádio Amor Deus Gospel
+   </h2>
+   <p class="max-w-3xl text-lg md:text-xl mb-8">
+    Sua fonte de música gospel edificante, mensagens inspiradoras e conexão espiritual.
+   </p>
+   <div class="flex items-center space-x-4">
+    <button class="bg-white text-red-600 font-bold px-6 py-3 rounded shadow hover:bg-red-50 transition">
+     Ouvir Ao Vivo
+    </button>
+    <button class="bg-transparent border-2 border-white text-white font-semibold px-6 py-3 rounded hover:bg-white hover:text-red-600 transition">
+     Programas
+    </button>
+   </div>
+  </section>
+  <!-- Seção Player Ao Vivo -->
+  <section class="bg-white shadow-md rounded-lg mx-4 md:mx-auto mt-10 max-w-4xl p-6 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+   <img alt="Microfone profissional de rádio com filtro pop em um estúdio, simbolizando transmissão ao vivo" class="w-36 h-36 rounded-lg object-cover shadow-md" height="150" src="https://storage.googleapis.com/a1aa/image/372c8a56-ae34-41fb-4376-30fd5fdea303.jpg" width="150"/>
+   <div class="flex-1">
+    <h3 class="text-2xl font-bold text-red-600 mb-2">
+     Ao Vivo Agora
+    </h3>
+    <p class="text-gray-700 mb-4">
+     Sintonize nossa música gospel e mensagens inspiradoras 24 horas por dia, 7 dias por semana.
+    </p>
     <audio id="audioPlayer" class="w-full max-w-md rounded" controls>
       <source src="https://stream-171.zeno.fm/8i25n4b6ixgvv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI4aTI1bjRiNml4Z3Z2IiwiaG9zdCI6InN0cmVhbS0xNzEuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6Ik44NUU1ekZiUncyWWdLZ2hHSXFSeHciLCJpYXQiOjE3NDc0NDU5ODcsImV4cCI6MTc0NzQ0NjA0N30.KLlRH5j32gba8px65tZxA2g4Q5pNfO6_kkp9UAjdpUU" type="audio/mpeg">
       Seu navegador não suporta o elemento de áudio.
     </audio>
-
-    <!-- Chat -->
-    <section class="w-full max-w-md">
-      <h3 class="text-xl font-semibold mt-6 mb-2">Chat da Rádio</h3>
-      <input type="text" id="nome" placeholder="Seu nome" class="w-full p-2 mb-2 text-black rounded" required />
-      <div id="chat"></div>
-      <form id="form-chat" class="flex mt-2">
-        <input type="text" id="mensagem" placeholder="Digite sua mensagem..." class="flex-1 p-2 text-black rounded-l" required />
-        <button type="submit" class="bg-white text-red-600 px-4 py-2 rounded-r font-bold">Enviar</button>
-      </form>
-    </section>
-  </main>
-
+   </div>
+  </section>
+  <!-- Seção Programas -->
+  <section class="container mx-auto px-4 py-16 max-w-6xl" id="programas">
+   <h2 class="text-3xl font-extrabold text-center text-red-600 mb-12">
+    Nossos Programas
+   </h2>
+   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
+     <img alt="Nascer do sol sobre uma paisagem pacífica com mãos levantadas em oração, simbolizando programa de oração matinal" class="w-28 h-28 rounded-full mb-4 object-cover" height="120" src="https://storage.googleapis.com/a1aa/image/22ebf52c-faf8-4527-ebed-67cfd4d974e8.jpg" width="120"/>
+     <h3 class="text-xl font-semibold mb-2">
+      Oração Matinal
+     </h3>
+     <p class="text-gray-700">
+      Comece seu dia com orações edificantes e música de adoração todas as manhãs às 6h.
+     </p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
+     <img alt="Microfone com notas musicais gospel flutuando ao redor, representando programa de talk show gospel" class="w-28 h-28 rounded-full mb-4 object-cover" height="120" src="https://storage.googleapis.com/a1aa/image/10c7cba5-dbc7-4ace-0038-230bcbb30e5f.jpg" width="120"/>
+     <h3 class="text-xl font-semibold mb-2">
+      Talk Gospel
+     </h3>
+     <p class="text-gray-700">
+      Junte-se aos nossos apresentadores para conversas inspiradoras e testemunhos toda semana às 12h.
+     </p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
+     <img alt="Congregação adorando com mãos levantadas em uma igreja durante culto noturno" class="w-28 h-28 rounded-full mb-4 object-cover" height="120" src="https://storage.googleapis.com/a1aa/image/253b773e-9848-4f68-bf71-9216073b845c.jpg" width="120"/>
+     <h3 class="text-xl font-semibold mb-2">
+      Adoração Noturna
+     </h3>
+     <p class="text-gray-700">
+      Termine seu dia com música gospel e adoração às 19h diariamente.
+     </p>
+    </div>
+   </div>
+  </section>
+  <!-- Seção Últimas Notícias -->
+  <section class="bg-red-50 py-16" id="noticias">
+   <div class="container mx-auto px-4 max-w-6xl">
+    <h2 class="text-3xl font-extrabold text-center text-red-600 mb-12">
+     Últimas Notícias
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+     <article class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+      <img alt="Evento gospel comunitário com pessoas reunidas ao ar livre cantando e adorando" class="w-full h-48 object-cover" height="250" src="https://storage.googleapis.com/a1aa/image/97718e4e-0fdb-44a2-02c0-2d7e5b0cc178.jpg" width="400"/>
+      <div class="p-6 flex flex-col flex-1">
+       <h3 class="text-xl font-semibold mb-2">
+        Evento Gospel Comunitário Traz Alegria
+       </h3>
+       <p class="text-gray-700 flex-1">
+        Nosso recente evento gospel ao ar livre uniu centenas em adoração e comunhão.
+       </p>
+       <time class="mt-4 text-sm text-gray-500" datetime="2024-06-01">
+        1 de Junho de 2024
+       </time>
+      </div>
+     </article>
+     <article class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+      <img alt="Apresentador de rádio falando em microfone em estúdio moderno, anunciando lançamento de novo programa gospel" class="w-full h-48 object-cover" height="250" src="https://storage.googleapis.com/a1aa/image/0702b33f-bde2-4f7f-8086-18e281e83191.jpg" width="400"/>
+      <div class="p-6 flex flex-col flex-1">
+       <h3 class="text-xl font-semibold mb-2">
+        Lançamento de Novo Programa Gospel em Julho
+       </h3>
+       <p class="text-gray-700 flex-1">
+        Fique ligado para nosso novo programa com artistas gospel e ensinamentos espirituais.
+       </p>
+       <time class="mt-4 text-sm text-gray-500" datetime="2024-06-15">
+        15 de Junho de 2024
+       </time>
+      </div>
+     </article>
+     <article class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+      <img alt="Voluntários embalando caixas de alimentos para campanha de caridade em salão de igreja" class="w-full h-48 object-cover" height="250" src="https://storage.googleapis.com/a1aa/image/539102c8-d28d-4c8b-29aa-be8cbf46619e.jpg" width="400"/>
+      <div class="p-6 flex flex-col flex-1">
+       <h3 class="text-xl font-semibold mb-2">
+        Campanha de Caridade Apoia Famílias Locais
+       </h3>
+       <p class="text-gray-700 flex-1">
+        Graças ao seu apoio, ajudamos mais de 200 famílias com alimentos e itens essenciais.
+       </p>
+       <time class="mt-4 text-sm text-gray-500" datetime="2024-05-28">
+        28 de Maio de 2024
+       </time>
+      </div>
+     </article>
+    </div>
+   </div>
+  </section>
+  <!-- Seção Sobre -->
+  <section class="container mx-auto px-4 py-16 max-w-5xl" id="sobre">
+   <h2 class="text-3xl font-extrabold text-center text-red-600 mb-12">
+    Sobre o Rádio Amor Deus Gospel
+   </h2>
+   <div class="flex flex-col md:flex-row items-center md:space-x-12">
+    <img alt="Vista interna de um estúdio moderno de rádio gospel com mesa de mixagem e microfones" class="rounded-lg shadow-md mb-8 md:mb-0 w-72 h-72 object-cover" height="300" src="https://storage.googleapis.com/a1aa/image/52d5aee0-998c-4682-1afe-13172d542a7d.jpg" width="300"/>
+    <div class="text-gray-700 text-lg leading-relaxed">
+     <p class="mb-4">
+      O Rádio Amor Deus Gospel é dedicado a espalhar o amor de Deus através da música gospel, mensagens inspiradoras e ações comunitárias. Desde nossa fundação, somos um farol de esperança e fé para ouvintes ao redor do mundo.
+     </p>
+     <p>
+      Nossa missão é elevar almas, incentivar o crescimento espiritual e conectar os fiéis pelo poder do rádio. Junte-se a nós diariamente para programas que nutrem seu espírito e trazem alegria ao seu coração.
+     </p>
+    </div>
+   </div>
+  </section>
+  <!-- Seção Contato -->
+  <section class="bg-white py-16" id="contato">
+   <div class="container mx-auto px-4 max-w-4xl">
+    <h2 class="text-3xl font-extrabold text-center text-red-600 mb-12">
+     Contate-Nos
+    </h2>
+    <form action="#" class="bg-red-50 rounded-lg shadow-md p-8 space-y-6" method="POST">
+     <div>
+      <label class="block text-gray-700 font-semibold mb-2" for="nome">
+       Nome
+      </label>
+      <input class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600" id="nome" name="nome" placeholder="Seu nome completo" required="" type="text"/>
+     </div>
+     <div>
+      <label class="block text-gray-700 font-semibold mb-2" for="email">
+       Email
+      </label>
+      <input class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600" id="email" name="email" placeholder="voce@exemplo.com" required="" type="email"/>
+     </div>
+     <div>
+      <label class="block text-gray-700 font-semibold mb-2" for="mensagem">
+       Mensagem
+      </label>
+      <textarea class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600" id="mensagem" name="mensagem" placeholder="Escreva sua mensagem aqui" required="" rows="5"></textarea>
+     </div>
+     <button class="w-full bg-red-600 text-white font-bold py-3 rounded hover:bg-red-700 transition" type="submit">
+      Enviar Mensagem
+     </button>
+    </form>
+    <div class="mt-12 text-center text-gray-700 space-y-3">
+     <p>
+      <i class="fas fa-phone-alt mr-2 text-red-600">
+      </i>
+      +55 11 99999-9999
+     </p>
+     <p>
+      <i class="fas fa-envelope mr-2 text-red-600">
+      </i>
+      contato@radioamordeusgospel.com.br
+     </p>
+     <p>
+      <i class="fas fa-map-marker-alt mr-2 text-red-600">
+      </i>
+      São Paulo, Brasil
+     </p>
+    </div>
+   </div>
+  </section>
+  <!-- Rodapé -->
+  <footer class="bg-red-600 text-white py-6 mt-auto">
+   <div class="container mx-auto px-4 text-center text-sm">
+    © 2024 Rádio Amor Deus Gospel. Todos os direitos reservados.
+   </div>
+  </footer>
   <script>
-    document.getElementById('playButton').addEventListener('click', function () {
-      const audio = document.getElementById('audioPlayer');
-      audio.play();
-    });
+   const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
 
-    document.getElementById('menu-btn').addEventListener('click', function () {
-      const menu = document.getElementById('mobile-menu');
-      menu.classList.toggle('hidden');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
     });
   </script>
-</body>
+ </body>
 </html>
