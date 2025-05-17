@@ -2,86 +2,87 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rádio Amor Deus Gospel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
+  <title>Meu Projeto Firebase</title>
+  <script type="module">
+    // Importa módulos do Firebase (v9+ modular SDK)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2-S4zYL2eU_GwPoyUwXeZLXUPdpzAzVM",
+      authDomain: "amordeus-ae3d6.firebaseapp.com",
+      projectId: "amordeus-ae3d6",
+      storageBucket: "amordeus-ae3d6.firebasestorage.app",
+      messagingSenderId: "1007935161262",
+      appId: "1:1007935161262:web:14a572f7c4729cfbbc3e3f",
+      measurementId: "G-2QQSBLDKED"
+    };
+
+    // Inicializa app Firebase e Analytics
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
+    // Firestore
+    const db = getFirestore(app);
+
+    // Função para enviar uma mensagem
+    async function enviarMensagem(texto) {
+      try {
+        await addDoc(collection(db, "chat-messages"), {
+          text: texto,
+          timestamp: Date.now()
+        });
+      } catch (e) {
+        console.error("Erro ao enviar mensagem:", e);
+      }
+    }
+
+    // Escuta mensagens em tempo real
+    const q = query(collection(db, "chat-messages"), orderBy("timestamp"));
+    onSnapshot(q, (querySnapshot) => {
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML = "";
+      querySnapshot.forEach((doc) => {
+        const msg = doc.data();
+        const div = document.createElement("div");
+        div.textContent = msg.text;
+        div.className = "mb-2 p-2 bg-red-100 rounded";
+        messagesDiv.appendChild(div);
+      });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    // Event listener para o botão enviar
+    window.onload = () => {
+      const sendBtn = document.getElementById("send-btn");
+      const input = document.getElementById("message-input");
+
+      sendBtn.addEventListener("click", () => {
+        const text = input.value.trim();
+        if (text !== "") {
+          enviarMensagem(text);
+          input.value = "";
+        }
+      });
+
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          sendBtn.click();
+        }
+      });
+    };
+  </script>
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
-  <!-- Cabeçalho -->
-  <header class="bg-white shadow-md">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <img src="https://storage.googleapis.com/a1aa/image/662ea4ff-baf6-4c1e-c421-4818703fdc25.jpg" alt="Logo" class="w-12 h-12 rounded-full object-cover" />
-        <h1 class="text-2xl font-bold text-red-600">Rádio Amor Deus Gospel</h1>
-      </div>
-      <nav class="hidden md:flex space-x-8 font-semibold text-gray-700">
-        <a href="#" class="hover:text-red-600 transition">Início</a>
-        <a href="#programas" class="hover:text-red-600 transition">Programas</a>
-        <a href="#noticias" class="hover:text-red-600 transition">Notícias</a>
-        <a href="#sobre" class="hover:text-red-600 transition">Sobre</a>
-        <a href="#contato" class="hover:text-red-600 transition">Contato</a>
-      </nav>
-      <button id="menu-btn" class="md:hidden text-gray-700 focus:outline-none">
-        <i class="fas fa-bars fa-lg"></i>
-      </button>
-    </div>
-    <nav id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
-      <a href="#" class="block px-4 py-3 border-b hover:bg-red-50 text-red-600 font-semibold">Início</a>
-      <a href="#programas" class="block px-4 py-3 border-b hover:bg-red-50">Programas</a>
-      <a href="#noticias" class="block px-4 py-3 border-b hover:bg-red-50">Notícias</a>
-      <a href="#sobre" class="block px-4 py-3 border-b hover:bg-red-50">Sobre</a>
-      <a href="#contato" class="block px-4 py-3 hover:bg-red-50">Contato</a>
-    </nav>
-  </header>
-
-  <!-- Hero -->
-  <section class="bg-red-600 text-white text-center px-6 py-20">
-    <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Bem-vindo ao Rádio Amor Deus Gospel</h2>
-    <p class="max-w-3xl mx-auto text-lg md:text-xl mb-8">
-      Sua fonte de música gospel edificante, mensagens inspiradoras e conexão espiritual.
-    </p>
-    <div class="flex justify-center space-x-4">
-      <a href="#player" class="bg-white text-red-600 font-bold px-6 py-3 rounded shadow hover:bg-red-50 transition">Ouvir Ao Vivo</a>
-      <a href="#programas" class="bg-transparent border-2 border-white text-white font-semibold px-6 py-3 rounded hover:bg-white hover:text-red-600 transition">Programas</a>
-    </div>
-  </section>
-
-  <!-- Player -->
-  <section id="player" class="bg-white shadow-md rounded-lg mx-4 md:mx-auto mt-10 max-w-4xl p-6 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
-    <img src="https://storage.googleapis.com/a1aa/image/372c8a56-ae34-41fb-4376-30fd5fdea303.jpg" alt="Microfone de rádio" class="w-36 h-36 rounded-lg object-cover shadow-md" />
-    <div class="flex-1">
-      <h3 class="text-2xl font-bold text-red-600 mb-2">Ao Vivo Agora</h3>
-      <p class="text-gray-700 mb-4">
-        Sintonize nossa música gospel e mensagens inspiradoras 24 horas por dia, 7 dias por semana.
-      </p>
-      <audio controls class="w-full rounded">
-        <!-- LINK DE RÁDIO FUNCIONAL AQUI -->
-        <source <source src="https://stream-176.zeno.fm/8i25n4b6ixgvv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI4aTI1bjRiNml4Z3Z2IiwiaG9zdCI6InN0cmVhbS0xNzYuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6ImVieXBHRmd1UldxbHlkLW84R092d3ciLCJpYXQiOjE3NDc0NDY5ODcsImV4cCI6MTc0NzQ0NzA0N30.JbS6xMndcShAtj5jrPaQPd5ymGuo8jtrK-BLDGt-3BI" type="audio/mpeg">
->
-        Seu navegador não suporta o player de áudio.
-      </audio>
-    </div>
-  </section>
-
-  <!-- Rodapé simples -->
-  <footer class="bg-gray-100 text-center py-6 mt-16 text-gray-600 text-sm">
-    © 2025 Rádio Amor Deus Gospel. Todos os direitos reservados.
-  </footer>
-
-  <!-- Script do menu mobile -->
-  <script>
-    const btn = document.getElementById('menu-btn');
-    const menu = document.getElementById('mobile-menu');
-    btn.addEventListener('click', () => {
-      menu.classList.toggle('hidden');
-    });
-  </script>
+<body>
+  <div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
+  <input id="message-input" type="text" placeholder="Digite sua mensagem..." style="width: 100%; padding: 10px; margin-top: 10px;">
+  <button id="send-btn" style="width: 100%; padding: 10px; margin-top: 5px; background-color: #dc2626; color: white; border: none; font-weight: bold;">Enviar</button>
 </body>
 </html>
