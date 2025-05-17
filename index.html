@@ -5,6 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rádio Ao Vivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Importa módulos do Firebase (versão modular)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Configuração do Firebase (substitua pelos seus dados)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2-S4zYL2eU_GwPoyUwXeZLXUPdpzAzVM",
+      authDomain: "amordeus-ae3d6.firebaseapp.com",
+      projectId: "amordeus-ae3d6",
+      storageBucket: "amordeus-ae3d6.firebasestorage.app",
+      messagingSenderId: "1007935161262",
+      appId: "1:1007935161262:web:14a572f7c4729cfbbc3e3f",
+      measurementId: "G-2QQSBLDKED"
+    };
+
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Envia mensagem para o Firestore
+    async function enviarMensagem(nome, texto) {
+      if (texto.trim() === "") return;
+      await addDoc(collection(db, "mensagens"), {
+        nome: nome || "Anônimo",
+        texto: texto,
+        timestamp: serverTimestamp()
+      });
+    }
+
+    // Atualiza mensagens em tempo real
+    const mensagensRef = collection(db, "mensagens");
+    const mensagensQuery = query(mensagensRef, orderBy("timestamp", "asc"));
+    onSnapshot(mensagensQuery, (snapshot) => {
+      const container = document.getElementById("chat");
+      container.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${msg.nome}:</strong> ${msg.texto}`;
+        container.appendChild(div);
+      });
+      container.scrollTop = container.scrollHeight;
+    });
+
+    // Aguarda o DOM carregar
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("form-chat");
+      const inputNome = document.getElementById("nome");
+      const inputTexto = document.getElementById("mensagem");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        enviarMensagem(inputNome.value, inputTexto.value);
+        inputTexto.value = "";
+      });
+    });
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #chat {
+      height: 300px;
+      overflow-y: auto;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    input {
+      width: calc(100% - 130px);
+    }
+    #nome {
+      width: calc(100% - 22px);
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #dc2626;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body class="bg-red-600 text-white">
 
@@ -47,5 +145,12 @@
       menu.classList.toggle('hidden');
     });
   </script>
+  <input type="text" id="nome" placeholder="Seu nome" required/>
+
+  <div id="chat"></div>
+
+  <form id="form-chat">
+    <input type="text" id="mensagem" placeholder="Digite sua mensagem..." required />
+    <button type="submit">Enviar</button>
 </body>
 </html>
