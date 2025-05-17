@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat Rádio com Firebase</title>
+  <title>Rádio Chat Firebase</title>
 
   <!-- Firebase SDKs -->
   <script type="module">
-    // Importa módulos do Firebase (versão modular)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Configuração do Firebase (substitua pelos seus dados)
     const firebaseConfig = {
       apiKey: "AIzaSyB2-S4zYL2eU_GwPoyUwXeZLXUPdpzAzVM",
       authDomain: "amordeus-ae3d6.firebaseapp.com",
@@ -22,11 +20,9 @@
       measurementId: "G-2QQSBLDKED"
     };
 
-    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Envia mensagem para o Firestore
     async function enviarMensagem(nome, texto) {
       if (texto.trim() === "") return;
       await addDoc(collection(db, "mensagens"), {
@@ -36,22 +32,39 @@
       });
     }
 
-    // Atualiza mensagens em tempo real
+    // Som de rádio
+    const alertaSom = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+
     const mensagensRef = collection(db, "mensagens");
     const mensagensQuery = query(mensagensRef, orderBy("timestamp", "asc"));
+    
+    let ultimaMensagemId = null;
+
     onSnapshot(mensagensQuery, (snapshot) => {
       const container = document.getElementById("chat");
       container.innerHTML = "";
+      let novaMensagem = false;
+
       snapshot.forEach((doc) => {
         const msg = doc.data();
         const div = document.createElement("div");
         div.innerHTML = `<strong>${msg.nome}:</strong> ${msg.texto}`;
         container.appendChild(div);
+
+        if (doc.id !== ultimaMensagemId) {
+          novaMensagem = true;
+          ultimaMensagemId = doc.id;
+        }
       });
+
       container.scrollTop = container.scrollHeight;
+
+      // Toca som se for uma nova mensagem
+      if (novaMensagem) {
+        alertaSom.play().catch(() => {}); // evita erro se bloqueado
+      }
     });
 
-    // Aguarda o DOM carregar
     window.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("form-chat");
       const inputNome = document.getElementById("nome");
@@ -67,53 +80,53 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #00ff88;
       margin: 0;
       padding: 20px;
     }
     h1 {
       text-align: center;
+      color: #ffffff;
     }
     #chat {
       height: 300px;
       overflow-y: auto;
-      background: #1e293b;
-      border-radius: 8px;
+      background: #111;
+      border: 2px dashed #00ff88;
       padding: 10px;
       margin-bottom: 10px;
+      font-size: 1.2em;
     }
     input, button {
       padding: 10px;
       border: none;
+      margin: 5px 0;
       border-radius: 5px;
-      margin: 5px;
+      font-size: 1em;
     }
     input {
-      width: calc(100% - 130px);
-    }
-    #nome {
       width: calc(100% - 22px);
-      margin-bottom: 10px;
+      background: #222;
+      color: #00ff88;
     }
     button {
-      background-color: #dc2626;
-      color: white;
+      width: 100%;
+      background-color: #00ff88;
+      color: black;
+      font-weight: bold;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>📻 Chat Rádio</h1>
-
-  <input type="text" id="nome" placeholder="Seu nome" required/>
-
+  <h1>📡 Rádio Chat Ao Vivo</h1>
+  <input type="text" id="nome" placeholder="Seu nome (opcional)" />
   <div id="chat"></div>
-
   <form id="form-chat">
-    <input type="text" id="mensagem" placeholder="Digite sua mensagem..." required />
-    <button type="submit">Enviar</button>
+    <input type="text" id="mensagem" placeholder="Fale no rádio..." required />
+    <button type="submit">Transmitir 📢</button>
   </form>
 </body>
 </html>
